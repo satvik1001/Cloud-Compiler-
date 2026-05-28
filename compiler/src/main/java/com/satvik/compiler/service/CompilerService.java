@@ -29,7 +29,16 @@ public class CompilerService {
 
             String input
 
-    ) {
+    )
+    
+    public String executeCode(
+        String code,
+        String language,
+        String input
+) {
+
+    return "Cloud deployment active 🚀\n\nBackend working successfully.\n\nOnline Docker execution is disabled on Render free plan.";
+}
 
         // CLOUD DEPLOYMENT MESSAGE
 
