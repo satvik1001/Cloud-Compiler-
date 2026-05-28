@@ -20,16 +20,6 @@ public class CompilerService {
         this.submissionRepository =
                 submissionRepository;
     }
-
-    public String executeCode(
-
-            String code,
-
-            String language,
-
-            String input
-
-    )
     
     public String executeCode(
         String code,
