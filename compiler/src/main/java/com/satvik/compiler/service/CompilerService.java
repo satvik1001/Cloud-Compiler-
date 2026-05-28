@@ -1,17 +1,12 @@
 package com.satvik.compiler.service;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.satvik.compiler.entity.Submission;
 import com.satvik.compiler.repository.SubmissionRepository;
-
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 
-import org.springframework.web.reactive.function.client.WebClient;
-
-import java.util.HashMap;
-import java.util.Map;
+import java.io.*;
+import java.nio.file.Files;
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class CompilerService {
@@ -35,99 +30,167 @@ public class CompilerService {
             String input
 
     ) {
+        if(true){
+
+            return "Cloud deployment active 🚀 Code execution available only on local machine.";
+        }
+
+        long startTime =
+                System.currentTimeMillis();
+
+        File folder = null;
+
+        File codeFile = null;
 
         try {
 
-            String pistonLanguage =
-                    language;
+            // CREATE TEMP FOLDER
 
-            String version = "*";
+            String folderName =
+                    "temp/" +
+                            System.currentTimeMillis();
+
+            folder =
+                    new File(folderName);
+
+            folder.mkdirs();
+
+            // FILE NAME + IMAGE NAME
+
+            String fileName = "";
+
+            String imageName = "";
 
             if(language.equals("java")) {
 
-                pistonLanguage = "java";
+                fileName = "Main.java";
 
-                version = "15.0.2";
+                imageName = "java-runner";
             }
 
             else if(language.equals("python")) {
 
-                pistonLanguage = "python";
+                fileName = "main.py";
 
-                version = "3.10.0";
+                imageName = "python-runner";
             }
 
             else if(language.equals("cpp")) {
 
-                pistonLanguage = "cpp";
+                fileName = "main.cpp";
 
-                version = "10.2.0";
+                imageName = "cpp-runner";
             }
 
-            Map<String, Object> body =
-                    new HashMap<>();
+            // CREATE CODE FILE
 
-            body.put(
-                    "language",
-                    pistonLanguage
-            );
+            codeFile =
+                    new File(folder, fileName);
 
-            body.put(
-                    "version",
-                    version
-            );
+            FileWriter writer =
+                    new FileWriter(codeFile);
 
-            body.put(
-                    "stdin",
-                    input
-            );
+            writer.write(code);
 
-            Map<String, String> file =
-                    new HashMap<>();
+            writer.close();
 
-            file.put(
-                    "content",
-                    code
-            );
+            // DOCKER PROCESS
 
-            body.put(
-                    "files",
-                    new Map[]{file}
-            );
+            ProcessBuilder pb =
+                    new ProcessBuilder(
 
-            WebClient client =
-                    WebClient.create();
+                            "docker",
 
-            String response =
+                            "run",
 
-                    client.post()
+                            "--rm",
 
-                            .uri(
-                                    "https://emkc.org/api/v2/piston/execute"
+                            "--memory=256m",
+
+                            "--cpus=1",
+
+                            "-v",
+
+                            folder.getAbsolutePath()
+                                    + ":/app",
+
+                            imageName
+                    );
+
+            Process process =
+                    pb.start();
+
+            // INPUT SUPPORT
+
+            OutputStream os =
+                    process.getOutputStream();
+
+            os.write(input.getBytes());
+
+            os.flush();
+
+            os.close();
+
+            // TIMEOUT
+
+            boolean finished =
+                    process.waitFor(
+                            5,
+                            TimeUnit.SECONDS
+                    );
+
+            if(!finished) {
+
+                process.destroyForcibly();
+
+                return "Time Limit Exceeded";
+            }
+
+            // OUTPUT
+
+            BufferedReader reader =
+                    new BufferedReader(
+
+                            new InputStreamReader(
+                                    process.getInputStream()
                             )
+                    );
 
-                            .contentType(
-                                    MediaType.APPLICATION_JSON
+            BufferedReader errorReader =
+                    new BufferedReader(
+
+                            new InputStreamReader(
+                                    process.getErrorStream()
                             )
+                    );
 
-                            .bodyValue(body)
+            StringBuilder output =
+                    new StringBuilder();
 
-                            .retrieve()
+            String line;
 
-                            .bodyToMono(String.class)
+            // NORMAL OUTPUT
 
-                            .block();
+            while((line = reader.readLine())
+                    != null) {
 
-            ObjectMapper mapper =
-                    new ObjectMapper();
+                output.append(line)
+                        .append("\n");
+            }
 
-            JsonNode root =
-                    mapper.readTree(response);
+            // ERROR OUTPUT
 
-            String output =
-                    root.path("run")
-                            .path("output")
-                            .asText();
+            while((line = errorReader.readLine())
+                    != null) {
+
+                output.append(line)
+                        .append("\n");
+            }
+
+            long endTime =
+                    System.currentTimeMillis();
+
+            // SAVE SUBMISSION
 
             Submission submission =
                     new Submission();
@@ -136,23 +199,59 @@ public class CompilerService {
 
             submission.setLanguage(language);
 
-            submission.setOutput(output);
+            submission.setOutput(
+                    output.toString()
+            );
 
-            submission.setExecutionTime(0);
+            submission.setExecutionTime(
+                    endTime - startTime
+            );
 
-            submission.setUsername("satvik");
+            submission.setUsername(
+                    "satvik"
+            );
 
             submissionRepository.save(
                     submission
             );
 
-            return output;
+            // FINAL RETURN
 
+            return output.toString();
         }
 
         catch (Exception e) {
 
             return e.getMessage();
+        }
+
+        finally {
+
+            try {
+
+                // DELETE FILE
+
+                if(codeFile != null) {
+
+                    Files.deleteIfExists(
+                            codeFile.toPath()
+                    );
+                }
+
+                // DELETE FOLDER
+
+                if(folder != null) {
+
+                    Files.deleteIfExists(
+                            folder.toPath()
+                    );
+                }
+
+            }
+
+            catch (Exception ignored) {
+
+            }
         }
     }
 }
