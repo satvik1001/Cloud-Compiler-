@@ -30,6 +30,9 @@ public class CompilerService {
             String input
 
     ) {
+
+        // CLOUD DEPLOYMENT MESSAGE
+
         if(true){
 
             return "Cloud deployment active 🚀 Code execution available only on local machine.";
@@ -208,7 +211,7 @@ public class CompilerService {
             );
 
             submission.setUsername(
-                    "satvik"
+                    "guest"
             );
 
             submissionRepository.save(
@@ -249,8 +252,9 @@ public class CompilerService {
 
             }
 
-            catch (Exception ignored) {
+            catch (Exception e) {
 
+                e.printStackTrace();
             }
         }
     }
