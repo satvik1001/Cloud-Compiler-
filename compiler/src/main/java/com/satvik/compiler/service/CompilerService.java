@@ -62,8 +62,18 @@ public class CompilerService {
             RestTemplate restTemplate =
                     new RestTemplate();
 
-            String url =
-                    "https://emkc.org/api/v2/piston/execute";
+           HttpURLConnection connection =
+        (HttpURLConnection)
+        new URL(url).openConnection();
+
+connection.setRequestMethod("POST");
+
+connection.setRequestProperty(
+        "Content-Type",
+        "application/json"
+);
+
+connection.setDoOutput(true);
 
             HttpHeaders headers =
                     new HttpHeaders();
