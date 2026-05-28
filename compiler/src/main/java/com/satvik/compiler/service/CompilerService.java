@@ -4,9 +4,11 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.satvik.compiler.entity.Submission;
 import com.satvik.compiler.repository.SubmissionRepository;
-import org.springframework.http.*;
+
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
+
+import org.springframework.web.reactive.function.client.WebClient;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -19,7 +21,9 @@ public class CompilerService {
     public CompilerService(
             SubmissionRepository submissionRepository
     ) {
-        this.submissionRepository = submissionRepository;
+
+        this.submissionRepository =
+                submissionRepository;
     }
 
     public String executeCode(
@@ -34,7 +38,8 @@ public class CompilerService {
 
         try {
 
-            String pistonLanguage = language;
+            String pistonLanguage =
+                    language;
 
             String version = "*";
 
@@ -58,29 +63,6 @@ public class CompilerService {
 
                 version = "10.2.0";
             }
-
-            RestTemplate restTemplate =
-                    new RestTemplate();
-
-           HttpURLConnection connection =
-        (HttpURLConnection)
-        new URL(url).openConnection();
-
-connection.setRequestMethod("POST");
-
-connection.setRequestProperty(
-        "Content-Type",
-        "application/json"
-);
-
-connection.setDoOutput(true);
-
-            HttpHeaders headers =
-                    new HttpHeaders();
-
-            headers.setContentType(
-                    MediaType.APPLICATION_JSON
-            );
 
             Map<String, Object> body =
                     new HashMap<>();
@@ -113,29 +95,34 @@ connection.setDoOutput(true);
                     new Map[]{file}
             );
 
-            HttpEntity<Map<String, Object>> request =
-                    new HttpEntity<>(
-                            body,
-                            headers
-                    );
+            WebClient client =
+                    WebClient.create();
 
-            ResponseEntity<String> response =
-                    restTemplate.postForEntity(
+            String response =
 
-                            url,
+                    client.post()
 
-                            request,
+                            .uri(
+                                    "https://emkc.org/api/v2/piston/execute"
+                            )
 
-                            String.class
-                    );
+                            .contentType(
+                                    MediaType.APPLICATION_JSON
+                            )
+
+                            .bodyValue(body)
+
+                            .retrieve()
+
+                            .bodyToMono(String.class)
+
+                            .block();
 
             ObjectMapper mapper =
                     new ObjectMapper();
 
             JsonNode root =
-                    mapper.readTree(
-                            response.getBody()
-                    );
+                    mapper.readTree(response);
 
             String output =
                     root.path("run")
