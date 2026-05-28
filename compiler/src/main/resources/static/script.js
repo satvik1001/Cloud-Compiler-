@@ -1,4 +1,8 @@
+```javascript
 let editor;
+
+const API =
+    window.location.origin;
 
 const templates = {
 
@@ -57,8 +61,6 @@ function changeLanguage() {
     const language =
         document.getElementById("language").value;
 
-    console.log("Changed Language:", language);
-
     let monacoLanguage = language;
 
     if(language === "cpp") {
@@ -75,58 +77,26 @@ function changeLanguage() {
         templates[language]
     );
 }
-async function loadHistory() {
-
-    const response =
-        await fetch(
-            'http://localhost:9090/history'
-        );
-
-    const data =
-        await response.json();
-
-    console.log(data);
-
-    let output = "";
-
-    data.forEach(sub => {
-
-        output +=
-
-`Language: ${sub.language}
-
-Output: ${sub.output}
-
-Execution Time:
-${sub.executionTime} ms
-
--------------------------
-
-`;
-    });
-
-    document.getElementById(
-        "output"
-    ).innerText = output;
-}
 
 async function loadHistory() {
 
-    const response =
-        await fetch(
-            'http://localhost:9090/history'
-        );
+    try {
 
-    const data =
-        await response.json();
+        const response =
+            await fetch(
+                `${API}/history`
+            );
 
-    let historyText = "";
+        const data =
+            await response.json();
 
-    // LATEST TO EARLIEST
+        let historyText = "";
 
-    data.reverse().forEach((sub, index) => {
+        // LATEST TO EARLIEST
 
-        historyText +=
+        data.reverse().forEach((sub, index) => {
+
+            historyText +=
 
 `================================
 
@@ -148,11 +118,19 @@ ${sub.executionTime} ms
 
 
 `;
-    });
+        });
 
-    document.getElementById(
-        "output"
-    ).innerText = historyText;
+        document.getElementById(
+            "output"
+        ).innerText = historyText;
+
+    } catch (error) {
+
+        document.getElementById(
+            "output"
+        ).innerText =
+            "Failed to load history.";
+    }
 }
 
 async function runCode() {
@@ -166,33 +144,42 @@ async function runCode() {
     const input =
         document.getElementById("input").value;
 
-    console.log("RUNNING:", language);
+    try {
 
-    const response =
-        await fetch(
-            'http://localhost:9090/run',
-            {
+        const response =
+            await fetch(
+                `${API}/run`,
+                {
 
-                method: 'POST',
+                    method: 'POST',
 
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
 
-                body: JSON.stringify({
+                    body: JSON.stringify({
 
-                    code: code,
+                        code: code,
 
-                    language: language,
+                        language: language,
 
-                    input: input
-                })
-            }
-        );
+                        input: input
+                    })
+                }
+            );
 
-    const result =
-        await response.text();
+        const result =
+            await response.text();
 
-    document.getElementById('output')
-            .innerText = result;
+        document.getElementById('output')
+                .innerText = result;
+
+    } catch (error) {
+
+        document.getElementById('output')
+                .innerText =
+                "Backend connection failed.";
+    }
 }
+```
+
