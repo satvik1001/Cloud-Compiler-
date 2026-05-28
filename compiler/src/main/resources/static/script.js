@@ -6,19 +6,19 @@ const API =
 const templates = {
 
 java:
-public class Main {
+`public class Main {
 
     public static void main(String[] args) {
 
         System.out.println("Hello Java");
     }
-},
+}`,
 
 python:
-print("Hello Python"),
+`print("Hello Python")`,
 
 cpp:
-#include<iostream>
+`#include<iostream>
 
 using namespace std;
 
@@ -27,7 +27,7 @@ int main(){
     cout<<"Hello C++"<<endl;
 
     return 0;
-}
+}`
 };
 
 require.config({
@@ -91,7 +91,7 @@ async function loadHistory() {
 
         historyText +=
 
-================================
+`================================
 
 Submission #${index + 1}
 
@@ -109,7 +109,7 @@ ${sub.executionTime} ms
 
 ================================
 
-;
+`;
     });
 
     document.getElementById(
