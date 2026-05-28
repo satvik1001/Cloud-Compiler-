@@ -1,25 +1,23 @@
-
 let editor;
 
-const API =
-    window.location.origin;
+const API = window.location.origin;
 
 const templates = {
 
-
-public class Main {
+    java:
+`public class Main {
 
     public static void main(String[] args) {
 
         System.out.println("Hello Java");
     }
-},
+}`,
 
     python:
-print("Hello Python"),
+`print("Hello Python")`,
 
     cpp:
-#include<iostream>
+`#include<iostream>
 
 using namespace std;
 
@@ -28,7 +26,7 @@ int main(){
     cout<<"Hello C++"<<endl;
 
     return 0;
-}
+}`
 };
 
 require.config({
@@ -40,7 +38,9 @@ require.config({
 require(['vs/editor/editor.main'], function () {
 
     editor = monaco.editor.create(
+
         document.getElementById('editor'),
+
         {
 
             value: templates.java,
@@ -83,16 +83,12 @@ async function loadHistory() {
     try {
 
         const response =
-            await fetch(
-                `${API}/history`
-            );
+            await fetch(`${API}/history`);
 
         const data =
             await response.json();
 
         let historyText = "";
-
-        // LATEST TO EARLIEST
 
         data.reverse().forEach((sub, index) => {
 
@@ -124,27 +120,29 @@ ${sub.executionTime} ms
             "output"
         ).innerText = historyText;
 
-    } catch (error) {
+    }
+
+    catch (error) {
 
         document.getElementById(
             "output"
         ).innerText =
-            "Failed to load history.";
+            "Failed to load history";
     }
 }
 
 async function runCode() {
 
-    const code =
-        editor.getValue();
-
-    const language =
-        document.getElementById("language").value;
-
-    const input =
-        document.getElementById("input").value;
-
     try {
+
+        const code =
+            editor.getValue();
+
+        const language =
+            document.getElementById("language").value;
+
+        const input =
+            document.getElementById("input").value;
 
         const response =
             await fetch(
@@ -173,12 +171,12 @@ async function runCode() {
 
         document.getElementById('output')
                 .innerText = result;
+    }
 
-    } catch (error) {
+    catch(error) {
 
         document.getElementById('output')
                 .innerText =
-                "Backend connection failed.";
+                "Backend connection failed";
     }
 }
-
