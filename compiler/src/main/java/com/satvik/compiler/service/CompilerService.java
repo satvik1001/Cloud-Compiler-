@@ -33,10 +33,7 @@ public class CompilerService {
 
         // CLOUD DEPLOYMENT MESSAGE
 
-        if(true){
-
-            return "Cloud deployment active 🚀 Code execution available only on local machine.";
-        }
+      
 
         long startTime =
                 System.currentTimeMillis();
