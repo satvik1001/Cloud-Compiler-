@@ -1,10 +1,11 @@
 let editor;
 
-const API = window.location.origin;
+const API =
+    window.location.origin;
 
 const templates = {
 
-    java:
+java:
 public class Main {
 
     public static void main(String[] args) {
@@ -13,10 +14,10 @@ public class Main {
     }
 },
 
-    python:
+python:
 print("Hello Python"),
 
-    cpp:
+cpp:
 #include<iostream>
 
 using namespace std;
@@ -38,9 +39,7 @@ require.config({
 require(['vs/editor/editor.main'], function () {
 
     editor = monaco.editor.create(
-
         document.getElementById('editor'),
-
         {
 
             value: templates.java,
@@ -80,21 +79,19 @@ function changeLanguage() {
 
 async function loadHistory() {
 
-    try {
+    const response =
+        await fetch(`${API}/history`);
 
-        const response =
-            await fetch(`${API}/history`);
+    const data =
+        await response.json();
 
-        const data =
-            await response.json();
+    let historyText = "";
 
-        let historyText = "";
+    data.reverse().forEach((sub, index) => {
 
-        data.reverse().forEach((sub, index) => {
+        historyText +=
 
-            historyText +=
-
-
+================================
 
 Submission #${index + 1}
 
@@ -112,71 +109,50 @@ ${sub.executionTime} ms
 
 ================================
 
-
 ;
-        });
+    });
 
-        document.getElementById(
-            "output"
-        ).innerText = historyText;
-
-    }
-
-    catch (error) {
-
-        document.getElementById(
-            "output"
-        ).innerText =
-            "Failed to load history";
-    }
+    document.getElementById(
+        "output"
+    ).innerText = historyText;
 }
 
 async function runCode() {
 
-    try {
+    const code =
+        editor.getValue();
 
-        const code =
-            editor.getValue();
+    const language =
+        document.getElementById("language").value;
 
-        const language =
-            document.getElementById("language").value;
+    const input =
+        document.getElementById("input").value;
 
-        const input =
-            document.getElementById("input").value;
+    const response =
+        await fetch(
+            `${API}/run`,
+            {
 
-        const response =
-            await fetch(
-                `${API}/run`,
-                {
+                method: 'POST',
 
-                    method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
 
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                body: JSON.stringify({
 
-                    body: JSON.stringify({
+                    code: code,
 
-                        code: code,
+                    language: language,
 
-                        language: language,
+                    input: input
+                })
+            }
+        );
 
-                        input: input
-                    })
-                }
-            );
+    const result =
+        await response.text();
 
-        const result =
-            await response.text();
-
-        document.getElementById('output')
-                .innerText = result;
-    }
-
-    catch(error) {
-
-        document.getElementById('output')
-                .innerText =
-                "Backend connection failed";
-    }
+    document.getElementById('output')
+            .innerText = result;
 }
